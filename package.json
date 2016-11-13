@@ -1,0 +1,46 @@
+{
+  "name": "logify",
+  "version": "1.0.0",
+  "description": "Convert QIF or Ledger files to Log JSON",
+  "scripts": {
+    "build": "lsc --no-header -c .",
+    "watch": "lsc --no-header -cw .",
+    "start": "node logify.js"
+  },
+  "bin": {
+    "logify": "./logify.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yousefamar/logify.git"
+  },
+  "keywords": [
+    "ledger",
+    "qif",
+    "json",
+    "log",
+    "bank",
+    "accounting",
+    "bookkeeping",
+    "transactions",
+    "personal",
+    "finance",
+    "managmenet",
+    "data",
+    "money",
+    "convert"
+  ],
+  "author": "Yousef Amar <yousef@amar.io> (http://yousefamar.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yousefamar/logify/issues"
+  },
+  "homepage": "https://github.com/yousefamar/logify#readme",
+  "devDependencies": {
+    "livescript": "^1.5.0"
+  },
+  "dependencies": {
+    "ledger-cli": "^0.2.0",
+    "tmp": "0.0.30"
+  }
+}
