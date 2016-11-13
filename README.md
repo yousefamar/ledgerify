@@ -1,2 +1,2 @@
-# ledgerify
-Convert QIF files to Ledger
+# logify
+Convert QIF or Ledger files to Log JSON
