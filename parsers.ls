@@ -2,10 +2,10 @@
 
 export ledger = do
   parse-commodity = ->
-    value = it.trim!.replace /[^\d.-]/ ''
-    currency = it.replace value, '' .trim!
+    amount = it.trim!.replace /[^\d.-]/ ''
+    currency = it.replace amount, '' .trim!
     currency: currency
-    value: parse-float value
+    amount: parse-float amount
 
   parse-info = ->
     info = {}
@@ -44,20 +44,20 @@ export ledger = do
       posting = parse-posting posting
       unless posting.commodity?
         if without?
-          throw new Error "Transaction with postings with empty values: #info"
+          throw new Error "Transaction with postings with empty commodity amounts:\n#it"
         without := posting
         continue
       sum[posting.commodity.currency] ||= 0
-      sum[posting.commodity.currency] += posting.commodity.value
+      sum[posting.commodity.currency] += posting.commodity.amount
       postings.push posting
 
     if without?
-      for currency, value of sum
+      for currency, amount of sum
         postings.push do
           account: without.account
           commodity:
             currency: currency
-            value: -value
+            amount: -amount
 
     if postings.length > 2
       # TODO: Consider rudimentary intelligence for more than two postings
@@ -67,7 +67,7 @@ export ledger = do
     destination = postings[1]
 
     # TODO: Support more than one currency
-    if source.commodity.value > destination.commodity.value
+    if source.commodity.amount > destination.commodity.amount
       temp        = source
       source      = destination
       destination = temp
@@ -99,5 +99,24 @@ export ledger = do
     return stream
 
 export qif = (file) ->
-  throw Error 'Not implemented'
-  require! \qif2json
+  require! [ stream, qif2json ]
+  stream = new stream.Readable!
+  stream._read = ->
+  qif2json.parse-file file, (err, data) !->
+    throw err if err?
+    data.transactions
+      ..for-each !-> it.date = Date.parse it.date
+      ..sort (a, b) -> a.date - b.date
+      ..for-each !->
+          # TODO: Allow specification of defaults for information QIF does not support
+          do
+            timestamp: it.date
+            cleared: true
+            description: it.payee
+            source: null
+            destination: null
+            commodity:
+              currency: null
+              amount: it.amount
+          |> JSON.stringify |> (+ \\n) |> stream.push
+  return stream

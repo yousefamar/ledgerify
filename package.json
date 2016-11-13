@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "ledger-cli": "^0.2.0",
+    "qif2json": "^0.2.0",
     "tmp": "0.0.30"
   }
 }
