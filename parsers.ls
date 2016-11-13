@@ -7,7 +7,20 @@ export ledger = do
     currency: currency
     value: parse-float value
 
-  parse-info = -> it
+  parse-info = ->
+    info = {}
+    it .= split ' '
+    dates = it.shift!.split \=
+    info.timestamp = Date.parse dates[0]
+    if dates.length > 1 then info.effective-timestamp = Date.parse dates[1]
+    info.cleared = true
+    if it[0] is \!
+      info.cleared = false
+    else if it[0] is \*
+      it.shift!
+    it .= join ' '
+    info.description = it
+    info
 
   parse-posting = ->
     # TODO: Ignore comments
@@ -21,7 +34,7 @@ export ledger = do
   parse-transaction = ->
     lines = it.split \\n
 
-    info = lines.shift!
+    info = parse-info lines.shift!
     postings = []
 
     sum = {}
@@ -46,7 +59,23 @@ export ledger = do
             currency: currency
             value: -value
 
-    { info, postings }
+    if postings.length > 2
+      # TODO: Consider rudimentary intelligence for more than two postings
+      throw new Error "Transactions with more than two postings are unsupported due to potential ambiguity of sources and destinations"
+
+    source      = postings[0]
+    destination = postings[1]
+
+    # TODO: Support more than one currency
+    if source.commodity.value > destination.commodity.value
+      temp        = source
+      source      = destination
+      destination = temp
+
+    transaction = {} <<<< info
+      ..source      = source.account
+      ..destination = destination.account
+      ..commodity   = destination.commodity
 
   (file) ->
     require! { stream, \ledger-cli : { Ledger } }
