@@ -1,11 +1,12 @@
 {
   "name": "logify",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Convert QIF or Ledger files to Log JSON",
   "scripts": {
     "build": "lsc --no-header -c .",
     "watch": "lsc --no-header -cw .",
-    "start": "node logify.js"
+    "start": "node logify.js",
+    "prepublish": "lsc --no-header -c ."
   },
   "bin": {
     "logify": "./logify.js"
