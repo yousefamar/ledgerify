@@ -86,15 +86,16 @@ export ledger = do
 
     stream = new stream.Readable!
     stream._read = ->
+    buffer = ''
     ledger.print!
-      ..on \data do ->
-        buffer = ''
-        !->
-          buffer += it
-          while ~buffer.index-of \\n\n
-            buffer .= split \\n\n
-            buffer.shift! |> parse-transaction |> JSON.stringify |> (+ \\n) |> stream.push
-            buffer .= join \\n\n
+      ..on \data !->
+        buffer += it
+        while ~buffer.index-of \\n\n
+          buffer .= split \\n\n
+          buffer.shift! |> parse-transaction |> JSON.stringify |> (+ \\n) |> stream.push
+          buffer .= join \\n\n
+      ..on \end !->
+          buffer.trim! |> parse-transaction |> JSON.stringify |> (+ \\n) |> stream.push
 
     return stream
 
@@ -105,18 +106,26 @@ export qif = (file) ->
   qif2json.parse-file file, (err, data) !->
     throw err if err?
     data.transactions
-      ..for-each !-> it.date = Date.parse it.date
+      ..for-each !->
+        # TODO: Warn user that we don't use US dates, and also drop QIF because it's a terrible format
+        it.date .= split \/
+        temp = it.date[0]
+        it.date[0] = it.date[1]
+        it.date[1] = temp
+        it.date .= join \/
+        it.date = Date.parse it.date
       ..sort (a, b) -> a.date - b.date
       ..for-each !->
-          # TODO: Allow specification of defaults for information QIF does not support
-          do
-            timestamp: it.date
-            cleared: true
-            description: it.payee
-            source: null
-            destination: null
-            commodity:
-              currency: null
-              amount: it.amount
-          |> JSON.stringify |> (+ \\n) |> stream.push
+        # TODO: Allow specification of defaults for information QIF does not support
+        do
+          timestamp: it.date
+          cleared: true
+          description: it.payee
+          source: null
+          destination: null
+          commodity:
+            currency: null
+            amount: it.amount
+        |> JSON.stringify |> (+ \\n) |> stream.push
+
   return stream
